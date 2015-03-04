@@ -1,6 +1,7 @@
 #include "PrefixSum.h"
 #include "DSZCudaUtility.h"
 #include <device_launch_parameters.h>
+#include <float.h>
 
 __device__
 float sum(float a, float b)
@@ -8,7 +9,27 @@ float sum(float a, float b)
 	return a + b;
 }
 
-__device__ op_pointer operations[] = { sum };
+__device__
+float d_min(float a, float b)
+{
+	bool a_cb = a < b;
+	return a_cb * a + (!a_cb) * b;
+}
+
+__device__
+float d_max(float a, float b)
+{
+	bool a_cb = a > b;
+	return a_cb * a + (!a_cb) * b;
+}
+
+__device__ op_pointer operations[] = { sum, d_min, d_max };
+__device__ float op_defaults[] = { 0, FLT_MAX, FLT_MIN };
+
+__device__ float cudaClamp(float x, float min, float max)
+{
+	return d_min(d_max(x, min), max);
+}
 
 void sequential_scan(float *x, float *y, unsigned int inputSize)
 {
@@ -162,15 +183,70 @@ void work_efficient_scan(float *x, float *y, unsigned int inputSize, op_t op)
 }
 
 // **** REDUCTION OP ****
+#define REDUCTION_SECTION_SIZE 2048
 __global__
-void reduction_op_kernel(float *x, float *out, op_t op)
+void reduction_op_kernel(float *x, float *out, unsigned int inputSize, op_t op)
 {
+	__shared__ float partial_op[REDUCTION_SECTION_SIZE];
+	
+	unsigned int i = blockIdx.x * REDUCTION_SECTION_SIZE + threadIdx.x;
+	unsigned int tx = threadIdx.x;
+	if (i < inputSize)
+		partial_op[tx] = x[i];
+	else
+		partial_op[tx] = op_defaults[op];
+	partial_op[tx + blockDim.x] = op_defaults[op];
 
+	for (unsigned int stride = blockDim.x; stride > 0; stride >>= 1)
+	{
+		__syncthreads();
+		if (tx < stride)
+			partial_op[tx] = operations[op](partial_op[tx], partial_op[tx + stride]);
+	}
+
+	if (tx == 0)
+		out[blockIdx.x] = partial_op[0];
 }
 
-void reduction_op(float *x, float *out, op_t op)
+float reduction_op(float *x, unsigned int inputSize, op_t op)
 {
+	size_t inputSize_bytes = inputSize * sizeof(float);
+	unsigned int sectionsCnt = (inputSize + REDUCTION_SECTION_SIZE - 1) / REDUCTION_SECTION_SIZE;
+	size_t outSize_bytes = sectionsCnt * sizeof(float);
+	float *d_x, *d_out;
+	cudaError err;
 
+	err = cudaMalloc(&d_x, inputSize_bytes); checkError(err);
+	err = cudaMalloc(&d_out, outSize_bytes); checkError(err);
+	err = cudaMemcpy(d_x, x, inputSize_bytes, cudaMemcpyHostToDevice); checkError(err);
+
+	dim3 gridDim(sectionsCnt, 1, 1);
+	dim3 blockDim(REDUCTION_SECTION_SIZE / 2, 1, 1);
+	reduction_op_kernel<<<gridDim, blockDim>>>(d_x, d_out, inputSize, op);
+	err = cudaGetLastError(); checkError(err);
+
+	float ret;
+	if (sectionsCnt == 1)
+	{
+		err = cudaMemcpy(&ret, d_out, sizeof(float), cudaMemcpyDeviceToHost); checkError(err);
+	}
+	else
+	{
+		float *d_out2;
+		err = cudaMalloc(&d_out2, sizeof(float)); checkError(err);
+
+		gridDim.x = 1;
+		reduction_op_kernel << <gridDim, blockDim >> >(d_out, d_out2, sectionsCnt, op);
+		err = cudaGetLastError(); checkError(err);
+
+		err = cudaMemcpy(&ret, d_out2, sizeof(float), cudaMemcpyDeviceToHost); checkError(err);
+		err = cudaFree(d_out2); checkError(err);
+	}
+	
+	err = cudaFree(d_x); checkError(err);
+	err = cudaFree(d_out); checkError(err);
+
+	return ret;
 }
 
 #define BLOCK_DIM 1024

@@ -154,3 +154,6 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+/ColorCorection/testSlika.bmp
+/ColorCorection/input.bmp
+/ColorCorection/outputGreyscale.bmp

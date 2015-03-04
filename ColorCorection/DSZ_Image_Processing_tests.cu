@@ -47,6 +47,7 @@ void histogram_test()
 	prob(histogram, probHistogram, 256, width*height);
 
 	work_efficient_scan(probHistogram, cumulHistogram, 256, SUM);
+	float min = reduction_op(cumulHistogram, 256, MIN);
 
 	free(inputPicture);
 	free(outputPicture);

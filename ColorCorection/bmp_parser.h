@@ -8,7 +8,7 @@ typedef struct
 	Byte_t b, g, r;
 } Pixel_t;
 
-#pragma pack(1)
+#pragma pack(push, 1)
 typedef struct
 {
 	unsigned short type;					/* Magic identifier            */
@@ -18,7 +18,6 @@ typedef struct
 } BMP_Header_t;
 
 
-#pragma pack(1)
 typedef struct
 {
 	unsigned int size;               /* Header size in bytes      */
@@ -31,7 +30,7 @@ typedef struct
 	unsigned int ncolours;           /* Number of colours         */
 	unsigned int importantcolours;   /* Important colours         */
 } BMP_InfoHeader_t;
-
+#pragma pack(pop)
 
 Pixel_t *loadPicture(char* fname, unsigned int *out_width, unsigned int *out_height);
 void storePicture(char *fname, Pixel_t *pixelArray, unsigned int width, unsigned int height);

@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Image Processing">
+      <UniqueIdentifier>{5e6dc432-da7f-46a7-bf6a-d29d4e3f0c79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Prefix Scan">
+      <UniqueIdentifier>{fc5e4774-868f-4ee5-93fc-2806e647539b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{7f24e356-0a3f-4c22-a69e-fef7b4de862f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bmp_parser.cpp">
+      <Filter>Image Processing</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bmp_parser.h">
+      <Filter>Image Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="DSZ_Image_Processing.h">
+      <Filter>Image Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="DSZCudaUtility.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="PrefixSum.h">
+      <Filter>Prefix Scan</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="DSZ_Image_Processing.cu">
+      <Filter>Image Processing</Filter>
+    </CudaCompile>
+    <CudaCompile Include="DSZ_Image_Processing_tests.cu">
+      <Filter>Image Processing</Filter>
+    </CudaCompile>
+    <CudaCompile Include="DSZCudaUtility.cu">
+      <Filter>Utility</Filter>
+    </CudaCompile>
+    <CudaCompile Include="PrefixSum.cu">
+      <Filter>Prefix Scan</Filter>
+    </CudaCompile>
+    <CudaCompile Include="PrefixSum_test.cu">
+      <Filter>Prefix Scan</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

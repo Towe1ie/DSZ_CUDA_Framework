@@ -18,6 +18,23 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bmp_parser.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bmp_parser.h" />
+    <ClInclude Include="DSZCudaUtility.h" />
+    <ClInclude Include="DSZ_Image_Processing.h" />
+    <ClInclude Include="PrefixSum.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="DSZCudaUtility.cu" />
+    <CudaCompile Include="DSZ_Image_Processing.cu" />
+    <CudaCompile Include="DSZ_Image_Processing_tests.cu" />
+    <CudaCompile Include="PrefixSum.cu" />
+    <CudaCompile Include="PrefixSum_test.cu" />
+    <CudaCompile Include="test.cu" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4B695E56-4D74-450B-B1BF-4ED493255864}</ProjectGuid>
     <RootNamespace>ColorCorection</RootNamespace>

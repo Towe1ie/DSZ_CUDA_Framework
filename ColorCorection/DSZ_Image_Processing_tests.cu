@@ -33,7 +33,7 @@ void convolution_test()
 void histogram_test()
 {
 	unsigned int width, height;
-	Pixel_t* inputPicture = loadPicture("testSlika.bmp", &width, &height);
+	Pixel_t* inputPicture = loadPicture("image.bmp", &width, &height);
 	size_t size = width * height * sizeof(Pixel_t);
 	Pixel_t* outputPicture = (Pixel_t*)malloc(size);
 
@@ -48,6 +48,9 @@ void histogram_test()
 
 	work_efficient_scan(probHistogram, cumulHistogram, 256, SUM);
 	float min = reduction_op(cumulHistogram, 256, MIN);
+
+	equalize(inputPicture, width, height, cumulHistogram, min, outputPicture);
+	storePicture("outputColorCorection.bmp", outputPicture, width, height);
 
 	free(inputPicture);
 	free(outputPicture);

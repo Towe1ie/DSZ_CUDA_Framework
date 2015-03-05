@@ -110,6 +110,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <HostDebugInfo>true</HostDebugInfo>
       <GPUDebugInfo>true</GPUDebugInfo>
       <PtxAsOptionV>true</PtxAsOptionV>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

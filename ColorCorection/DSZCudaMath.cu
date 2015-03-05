@@ -23,5 +23,10 @@ float d_max(float a, float b)
 __device__
 float cudaClamp(float x, float min, float max)
 {
-	return d_min(d_max(x, min), max);
+	if (x < min)
+		return min;
+	else if (x > max)
+		return max;
+	else
+		return x;
 }

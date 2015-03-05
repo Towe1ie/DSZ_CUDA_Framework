@@ -23,11 +23,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bmp_parser.h" />
+    <ClInclude Include="DSZCudaMath.h" />
     <ClInclude Include="DSZCudaUtility.h" />
     <ClInclude Include="DSZ_Image_Processing.h" />
     <ClInclude Include="PrefixSum.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="DSZCudaMath.cu" />
     <CudaCompile Include="DSZCudaUtility.cu" />
     <CudaCompile Include="DSZ_Image_Processing.cu" />
     <CudaCompile Include="DSZ_Image_Processing_tests.cu" />
@@ -104,6 +106,11 @@
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <HostDebugInfo>true</HostDebugInfo>
+      <GPUDebugInfo>true</GPUDebugInfo>
+      <PtxAsOptionV>true</PtxAsOptionV>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -122,6 +129,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <HostDebugInfo>true</HostDebugInfo>
+      <GPUDebugInfo>true</GPUDebugInfo>
+      <PtxAsOptionV>true</PtxAsOptionV>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,6 +153,11 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <HostDebugInfo>true</HostDebugInfo>
+      <GPUDebugInfo>true</GPUDebugInfo>
+      <PtxAsOptionV>true</PtxAsOptionV>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -165,6 +180,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <HostDebugInfo>true</HostDebugInfo>
+      <GPUDebugInfo>true</GPUDebugInfo>
+      <PtxAsOptionV>true</PtxAsOptionV>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

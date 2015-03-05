@@ -29,6 +29,9 @@
     <ClInclude Include="PrefixSum.h">
       <Filter>Prefix Scan</Filter>
     </ClInclude>
+    <ClInclude Include="DSZCudaMath.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="DSZ_Image_Processing.cu">
@@ -45,6 +48,10 @@
     </CudaCompile>
     <CudaCompile Include="PrefixSum_test.cu">
       <Filter>Prefix Scan</Filter>
+    </CudaCompile>
+    <CudaCompile Include="test.cu" />
+    <CudaCompile Include="DSZCudaMath.cu">
+      <Filter>Utility</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

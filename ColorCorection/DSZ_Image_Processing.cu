@@ -1,16 +1,10 @@
 #include "DSZ_Image_Processing.h"
 #include "DSZCudaUtility.h"
+#include "DSZCudaMath.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <cuda_runtime.h>
-#include <device_launch_parameters.h>
-#include <sm_20_atomic_functions.h>
-
-#include "bmp_parser.h"
-
 
 __device__
 static Pixel_t createPixel(Byte_t r, Byte_t g, Byte_t b)
@@ -155,7 +149,7 @@ void tiled_convolution2D(Pixel_t *inputPicture, Pixel_t *outputPicture, unsigned
 }
 
 // **** Greyscale ****
-#define BLOCK_DIM 16
+#define GREYSCALE_BLOCK_DIM 16
 __global__
 void greyscale_kernel(const Pixel_t* __restrict__ inputPicture, Pixel_t *outputPicture, unsigned int width, unsigned int height)
 {
@@ -183,16 +177,16 @@ void greyscale(Pixel_t *inputPicture, Pixel_t *outputPicture, unsigned int width
 	err = cudaMalloc(&d_out, size); checkError(err);
 	cudaMemcpy(d_in, inputPicture, size, cudaMemcpyHostToDevice);
 
-	dim3 gridDimension((width + BLOCK_DIM - 1) / BLOCK_DIM, (height + BLOCK_DIM - 1) / BLOCK_DIM, 1);
-	dim3 blockDimension(BLOCK_DIM, BLOCK_DIM, 1);
+	dim3 gridDimension((width + GREYSCALE_BLOCK_DIM - 1) / GREYSCALE_BLOCK_DIM, (height + GREYSCALE_BLOCK_DIM - 1) / GREYSCALE_BLOCK_DIM, 1);
+	dim3 blockDimension(GREYSCALE_BLOCK_DIM, GREYSCALE_BLOCK_DIM, 1);
 	greyscale_kernel<<<gridDimension, blockDimension>>>(d_in, d_out, width, height);
 	err = cudaGetLastError(); checkError(err);
 
 	err = cudaMemcpy(outputPicture, d_out, size, cudaMemcpyDeviceToHost);
 	checkError(err);
 
-	cudaFree(d_in);
-	cudaFree(d_out);
+	err = cudaFree(d_in); checkError(err);
+	err = cudaFree(d_out); checkError(err);
 }
 
 // **** Histogram ****
@@ -218,7 +212,6 @@ void compute_Image_Histogram_kernel(Pixel_t *inputPicture, unsigned int width, u
 	if (threadIdx.x < 256)
 		atomicAdd(&histogram[threadIdx.x], ds_histogram[threadIdx.x]);
 }
-
 void compute_Image_Histogram(Pixel_t *inputPicture, unsigned int width, unsigned int height, unsigned int *histogram)
 {
 	Pixel_t *d_inImage;
@@ -242,4 +235,50 @@ void compute_Image_Histogram(Pixel_t *inputPicture, unsigned int width, unsigned
 
 	err = cudaFree(d_inImage); checkError(err);
 	err = cudaFree(d_outHisto); checkError(err);
+}
+
+// **** Color correction ////
+#define COLOR_CORRECTION_BLOCK_LENGTH 512
+
+__global__
+void equalize_kernel(const Pixel_t* __restrict__ inputPicture, unsigned int width, unsigned int height, float* __restrict__ cdf, unsigned int cdf_min, Pixel_t *outPicture)
+{
+	unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if (i < width * height)
+	{
+		Pixel_t in_p = inputPicture[i];
+		Pixel_t out_p;
+		out_p.r = cudaClamp(255 * (cdf[in_p.r] - cdf_min) / (1 - cdf_min), 0.0f, 255.0f);
+		out_p.b = cudaClamp(255 * (cdf[in_p.b] - cdf_min) / (1 - cdf_min), 0, 255);
+		out_p.g = cudaClamp(255 * (cdf[in_p.g] - cdf_min) / (1 - cdf_min), 0, 255);
+		outPicture[i] = out_p;
+	}
+}
+
+void equalize(const Pixel_t *inputPicture, unsigned int width, unsigned int height, const float *cdf, unsigned int cdf_min, Pixel_t *outPicture)
+{
+	Pixel_t *d_in, *d_out;
+	cudaError err;
+	size_t size = width * height * sizeof(Pixel_t);
+	err = cudaMalloc(&d_in, size); checkError(err);
+	err = cudaMalloc(&d_out, size); checkError(err);
+	cudaMemcpy(d_in, inputPicture, size, cudaMemcpyHostToDevice);
+
+	float *d_cdf;
+	size_t cdfSize = 256 * sizeof(float);
+	err = cudaMalloc(&d_cdf, cdfSize); checkError(err);
+	cudaMemcpy(d_cdf, cdf, cdfSize, cudaMemcpyHostToDevice);
+
+	dim3 gridDimension((width*height + COLOR_CORRECTION_BLOCK_LENGTH - 1) / COLOR_CORRECTION_BLOCK_LENGTH, 1, 1);
+	dim3 blockDimension(COLOR_CORRECTION_BLOCK_LENGTH, 1, 1);
+	equalize_kernel << <gridDimension, blockDimension >> >(d_in, width, height, d_cdf, cdf_min, d_out);
+	err = cudaGetLastError(); checkError(err);
+
+	err = cudaMemcpy(outPicture, d_out, size, cudaMemcpyDeviceToHost);
+	checkError(err);
+
+	err = cudaFree(d_in); checkError(err);
+	err = cudaFree(d_out); checkError(err);
+	err = cudaFree(d_cdf); checkError(err);
 }
